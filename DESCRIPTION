@@ -1,0 +1,26 @@
+Package: MetaStudies
+Type: Package
+Title: Shiny app and function for Meta studies following Andrews and Kasy (2019).
+Version: 0.1.0
+Author: Maximilian Kasy, Sebastian Kranz
+Maintainer: Sebastian Kranz <sebastian.kranz@uni-ulm.de>
+Description: 
+      This package mainly consists of Maximilan Kasy's code
+      of his shiny app for MetaStudies
+      on publication bias.
+      I added some stuff, rewrote it a bit and
+      put everything into an R package.
+      The original code is here: 
+      https://github.com/maxkasy/MetaStudiesApp
+      The code is based on Andrews and Kasy (2019).
+      In particular I added coded to run misspecification tests 
+      that will be explained in Kranz and Pütz (2021).
+      References:
+      - Andrews, Isaiah and Maximilian Kasy. 2019. “Identification of and correction for publication bias.” American Economic Review 109 (8): 2766-94.
+      - Kranz, Sebastian and Peter Pütz. 2021 “Rounding and other pitfalls in meta-studies on p-hacking and publication bias. A comment on Brodeur et al. (2020)”, working paper.
+License: Attribution-NonCommercial-ShareAlike 4.0 
+         https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
+Encoding: UTF-8
+Depends: ggplot2, reshape, shiny, restorepoint, dplyr
+LazyData: true
+RoxygenNote: 7.1.1
