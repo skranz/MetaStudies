@@ -1,9 +1,36 @@
-#' Ideally
-
+#' Computes correlations to test the independece assumption between
+#' estimate and standard error of Andrews and Kasy (2019)
+#'
+#' A crucial assumption of Andrews and Kasy (2019) is that in the unobserved
+#' latent distribution without publication error the estimate and its standard
+#' error are statistically independent from each other.
+#'
+#' While the latent distribution cannot be observed, this function computes
+#' some correlations that may indicate problems with respect to this assumption.
+#' Results with \code{mode=="ipv"} use an inverse probability weighting approach.
+#' More precisely, it weights inversely with the estimated publication probabilities to recover the correlation in the
+#' unobserved latent distribution. (This approach was suggested in an email by
+#' Isaiah Andrews and implemented by Sebastian Kranz).
+#'
+#' To compute standard errrors via bootstrap (very time consuming),
+#' call the function \code{bootstrap_specification_tests}.
+#'
+#' In addition we show the correlations between the estimate and standard
+#' errors separately for each interval inside which a constant publication
+#' probability is assumed using directly the observed data without
+#' inverse probability weighting.
+#' While not a formal test, it would be reassuring if these correlations
+#' would be close to zero.
+#'
+#' @param ms An object returned from the function \code{metastudies_estimation}
+#' @returns a data frame with correlations, confidence intervals and also relevent results from a linear regression of standard errors on estimates.
 metastudy_X_sigma_cors = function(ms, intervals = 1:NROW(ms$prob.df)) {
   restore.point("metastudy_X_sigma_cors")
 
   dat = ms$dat
+
+  intervals = intersect(intervals, unique(dat$interval.ind))
+
   dat.log = dat %>%
     filter(X >0, sigma >0) %>%
     mutate(X = log(X), sigma=log(sigma))
@@ -98,16 +125,25 @@ metastudy_X_sigma_cors = function(ms, intervals = 1:NROW(ms$prob.df)) {
   ) %>% as_tibble()
 }
 
-bootstrap_specification_tests = function(X, sigma,cluster = NULL, B = 10, ..., num.cores = 1) {
+#' Call metastudy_X_sigma_cors repeatedly with new bootstrap samples to
+#' compute standard errors for correlations using the inverse probability weighting approach
+#'
+#' Note that this procedure can take very long to run.
+#' @param X vector of parameters
+#' @param sigma vector of standard errors
+#' @param B number of bootstrap replications
+#' @param ... parameters passed to \code{metastudies_estimation}
+#' @param num.cores number of cores used for parallel computation using \code{mclapply}.
+bootstrap_specification_tests = function(X, sigma, B = 10, ..., num.cores = 1) {
   if (num.cores==1) {
     bs = bind_rows(lapply(1:B, function(i) {
       cat("\n",i)
-      bootstrap_specification_tests_inner(X,sigma, cluster,...)
+      bootstrap_specification_tests_inner(X,sigma, ...)
     }))
   } else {
     library(parallel)
     bs = bind_rows(mclapply(1:B, mc.cores=num.cores, function(i) {
-      bootstrap_specification_tests_inner(X,sigma, cluster,...)
+      bootstrap_specification_tests_inner(X,sigma, ...)
     }))
   }
   sum = summarize_bootstrap_specification_tests(bs)
@@ -149,15 +185,12 @@ summarize_bootstrap_specification_tests = function(bs.sim, cols = colnames(bs.si
   select(trans, mode, stat, cor, beta, r.sqr, everything())
 }
 
-bootstrap_specification_tests_inner = function(X, sigma, cluster = NULL,...) {
-  if (is.null(cluster)) {
-    n = NROW(X)
-    rows = sample.int(n,n, replace=TRUE)
-    X.b = X[rows]
-    sigma.b = sigma[rows]
-    ms = metastudies_estimation(X.b, sigma.b, ...)
-    #restore.point("bootstrap_specification_tests_inner2")
-    metastudy_X_sigma_cors(ms)
-  }
-
+bootstrap_specification_tests_inner = function(X, sigma,...) {
+  n = NROW(X)
+  rows = sample.int(n,n, replace=TRUE)
+  X.b = X[rows]
+  sigma.b = sigma[rows]
+  ms = metastudies_estimation(X.b, sigma.b, ...)
+  #restore.point("bootstrap_specification_tests_inner2")
+  metastudy_X_sigma_cors(ms)
 }

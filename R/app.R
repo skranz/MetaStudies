@@ -1,7 +1,42 @@
 #' Create and run the MetaStudies shiny app
 #'
 #' @param ... additional parameters passed to \code{shinyApp}
-MetaStudiesApp = function(csv.file=NULL,...) {
+MetaStudiesApp = function(csv.file=NULL,show.cor = TRUE,...) {
+  res.ui = tagList(
+    h2("Model estimates", align = "center"),
+    h4("Distribution of true effects, conditional publication proabilities", align = "center"),
+    column(12, align="center",
+           tableOutput("estimatestable"),
+           plotOutput("estplot", width = "70%")
+    )
+  )
+
+  if (show.cor) {
+    lower.ui = tabsetPanel(
+      tabPanel("Results",res.ui),
+      tabPanel("Specification tests",
+        h3("Correlations between logs of estimate and standard deviation"),
+        tableOutput("cortable"),
+        helpText("
+Explanation: One crucial assumption of the Andrews and Kasy (2019) approach is that in the latent distribution without publication bias the estimate and its standard error are statistically independent across tests.
+
+While the latent distribution cannot be observed, the table above shows
+some correlations for which absolute values not close to zero may indicate problems with respect to this assumption.
+
+The first correlation uses an inverse probability weighting approach.
+More precisely we compute a weighted correlation weighting each observation inversely with the estimated publication probability for it. Assuming all
+assumptions are satisfied this should yield a consistent estimate of the correlation in the unobserved latent distribution.
+
+Later rows show the correlations between the estimate and standard
+errors separately for each interval inside which a constant publication
+probability is assumed using directly the observed data without inverse probability weighting. While those are not formal tests, it would be reassuring if these correlations would be close to zero.")
+      )
+    )
+  } else {
+    lower.ui = tagList(hr, res.ui)
+  }
+
+
   ui <- fluidPage(
     # titlePanel(h1("Optimal treatment assignment given covariates", align = "center")),
     sidebarLayout(
@@ -39,13 +74,7 @@ MetaStudiesApp = function(csv.file=NULL,...) {
                       plotOutput("hist")))
       )
     ),
-    hr(),
-    h2("Model estimates", align = "center"),
-    h4("Distribution of true effects, conditional publication proabilities", align = "center"),
-    column(12, align="center",
-           tableOutput("estimatestable"),
-           plotOutput("estplot", width = "70%")
-    )
+    lower.ui
   )
 
   server <- function(input, output, session) {
@@ -93,6 +122,10 @@ MetaStudiesApp = function(csv.file=NULL,...) {
 
       v$ms=metastudies_estimation(v$X,v$sigma,v$cutoffs, v$symmetric, model= v$modelmu)
 
+      if (show.cor) {
+        v$cors = metastudy_X_sigma_cors(v$ms)
+      }
+
       output$estplot = renderPlot({
           estimates_plot(v$ms)
       })
@@ -103,6 +136,27 @@ MetaStudiesApp = function(csv.file=NULL,...) {
      {req(v$ms)
       v$ms$est_tab
      })
+
+    # show correlations for specification tests
+    output$cortable =  renderTable(rownames=TRUE,hover=TRUE,digits=3, striped=TRUE,{
+      req(v$cors)
+      tab = v$cors %>%
+        filter(trans=="log") %>%
+        mutate(
+          cor = round(cor,3),
+          label = case_when(
+            mode=="ipv" ~ "Estimated latent distribution",
+            TRUE ~ paste0("Observed distribution in range ",mode)
+          ),
+          ci = case_when(
+            mode == "ipv" ~ "Not computed",
+            TRUE ~ paste0("[",round(conf.cor.low,3),", ",round(conf.cor.up,3),"]")
+          )
+        ) %>%
+        select(`Type`=label, `Correlation`=cor,`95% CI`=ci)
+      tab
+    })
+
   }
   shinyApp(ui = ui, server = server,...)
 }

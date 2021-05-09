@@ -4,7 +4,7 @@
 \alias{MetaStudiesApp}
 \title{Create and run the MetaStudies shiny app}
 \usage{
-MetaStudiesApp(csv.file = NULL, ...)
+MetaStudiesApp(csv.file = NULL, show.cor = TRUE, ...)
 }
 \arguments{
 \item{...}{additional parameters passed to \code{shinyApp}}
