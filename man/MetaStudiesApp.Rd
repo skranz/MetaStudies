@@ -7,6 +7,12 @@
 MetaStudiesApp(csv.file = NULL, show.cor = TRUE, ...)
 }
 \arguments{
+\item{csv.file}{if not NULL a file that will be initially used by the app}
+
+\item{show.cor}{if TRUE add a tabPanel with correlations between estimates and standard
+errors to get better insights whether the independence assumption
+of Andrews & Kasy (2019) may be violated in the given data set.}
+
 \item{...}{additional parameters passed to \code{shinyApp}}
 }
 \description{

@@ -120,7 +120,7 @@ z_histogram=function(X,sigma){
 
 #' Plot
 estimates_plot<-function(ms, X=ms$X, sigma=ms$sigma, cutoffs=ms$cutoffs, symmetric=ms$symmetric, model=ms$model){
-  restore.point("estimates_plot")
+  #restore.point("estimates_plot")
   n=500
   psi_hat= ms$psi_hat
   rangeZ=3

@@ -25,7 +25,7 @@
 #' @param ms An object returned from the function \code{metastudies_estimation}
 #' @returns a data frame with correlations, confidence intervals and also relevent results from a linear regression of standard errors on estimates.
 metastudy_X_sigma_cors = function(ms, intervals = 1:NROW(ms$prob.df)) {
-  restore.point("metastudy_X_sigma_cors")
+  #restore.point("metastudy_X_sigma_cors")
 
   dat = ms$dat
 

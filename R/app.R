@@ -1,5 +1,9 @@
 #' Create and run the MetaStudies shiny app
 #'
+#' @param csv.file if not NULL a file that will be initially used by the app
+#' @param show.cor if TRUE add a tabPanel with correlations between estimates and standard
+#'                 errors to get better insights whether the independence assumption
+#'                 of Andrews & Kasy (2019) may be violated in the given data set.
 #' @param ... additional parameters passed to \code{shinyApp}
 MetaStudiesApp = function(csv.file=NULL,show.cor = TRUE,...) {
   res.ui = tagList(
@@ -33,7 +37,7 @@ probability is assumed using directly the observed data without inverse probabil
       )
     )
   } else {
-    lower.ui = tagList(hr, res.ui)
+    lower.ui = tagList(hr(), res.ui)
   }
 
 
@@ -137,25 +141,27 @@ probability is assumed using directly the observed data without inverse probabil
       v$ms$est_tab
      })
 
-    # show correlations for specification tests
-    output$cortable =  renderTable(rownames=TRUE,hover=TRUE,digits=3, striped=TRUE,{
-      req(v$cors)
-      tab = v$cors %>%
-        filter(trans=="log") %>%
-        mutate(
-          cor = round(cor,3),
-          label = case_when(
-            mode=="ipv" ~ "Estimated latent distribution",
-            TRUE ~ paste0("Observed distribution in range ",mode)
-          ),
-          ci = case_when(
-            mode == "ipv" ~ "Not computed",
-            TRUE ~ paste0("[",round(conf.cor.low,3),", ",round(conf.cor.up,3),"]")
-          )
-        ) %>%
-        select(`Type`=label, `Correlation`=cor,`95% CI`=ci)
-      tab
-    })
+    if (show.cor) {
+      # show correlations for specification tests
+      output$cortable =  renderTable(rownames=TRUE,hover=TRUE,digits=3, striped=TRUE,{
+        req(v$cors)
+        tab = v$cors %>%
+          filter(trans=="log") %>%
+          mutate(
+            cor = round(cor,3),
+            label = case_when(
+              mode=="ipv" ~ "Estimated latent distribution",
+              TRUE ~ paste0("Observed distribution in range ",mode)
+            ),
+            ci = case_when(
+              mode == "ipv" ~ "Not computed",
+              TRUE ~ paste0("[",round(conf.cor.low,3),", ",round(conf.cor.up,3),"]")
+            )
+          ) %>%
+          select(`Type`=label, `Correlation`=cor,`95% CI`=ci)
+        tab
+      })
+    }
 
   }
   shinyApp(ui = ui, server = server,...)

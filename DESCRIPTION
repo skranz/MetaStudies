@@ -21,6 +21,6 @@ Description:
 License: Attribution-NonCommercial-ShareAlike 4.0 
          https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
 Encoding: UTF-8
-Depends: ggplot2, reshape, shiny, restorepoint, dplyr
+Depends: ggplot2, reshape, shiny, dplyr
 LazyData: true
 RoxygenNote: 7.1.1

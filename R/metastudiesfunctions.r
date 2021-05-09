@@ -9,7 +9,7 @@
 #' @param eval.max,iter.max,abs.tol Control parameters for [stats::nlminb].
 metastudies_estimation=function(X,sigma, cutoffs=c(1.96),symmetric=FALSE, model="normal", eval.max=10^5,iter.max=10^5,abs.tol=10^(-8),stepsize=10^(-6)){
 
-  restore.point("metastudies_estimation")
+  #restore.point("metastudies_estimation")
   nn=length(X)
   #%regressors for step function p
   TT=X/sigma;
