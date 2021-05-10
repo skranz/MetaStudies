@@ -92,10 +92,8 @@ probability is assumed using directly the observed data without inverse probabil
     }
 
     observe({
-      cat("\nObserve input$file1 change")
       req(input$file1)
       file = input$file1$datapath
-      restore.point("observe input$file1")
       load.data(file)
     })
 

@@ -13,7 +13,7 @@ Description:
       The original code is here: 
       https://github.com/maxkasy/MetaStudiesApp
       The code is based on Andrews and Kasy (2019).
-      In particular I added coded to run misspecification tests 
+      In particular, I added code to run misspecification tests 
       that will be explained in Kranz and Pütz (2021).
       References:
       - Andrews, Isaiah and Maximilian Kasy. 2019. “Identification of and correction for publication bias.” American Economic Review 109 (8): 2766-94.

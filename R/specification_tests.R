@@ -123,6 +123,7 @@ metastudy_X_sigma_cors = function(ms, intervals = 1:NROW(ms$prob.df)) {
     ipv.log.res,
     int.res
   ) %>% as_tibble()
+  res
 }
 
 #' Call metastudy_X_sigma_cors repeatedly with new bootstrap samples to
