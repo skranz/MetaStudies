@@ -207,7 +207,7 @@ summary {
 example.csv = system.file(&quot;data/IV.csv&quot;, package=&quot;MetaStudies&quot;)
 MetaStudiesApp(example.csv, show.cor=TRUE)</code></pre>
 <p>You could also put the the code above into an <code>app.R</code> file to specify it as a app for Shiny server.</p>
-<p>If you want to run the app in Maximilan Kasy’s orginal version (without pre-loaded file and no tab for correlations) just type:</p>
+<p>If you want to run the app in Maximilan Kasy’s original version (without pre-loaded file and no tab for correlations) just type:</p>
 <pre class="r"><code>library(MetaStudies)
 MetaStudiesApp(show.cor=FALSE)</code></pre>
 </div>
@@ -215,7 +215,8 @@ MetaStudiesApp(show.cor=FALSE)</code></pre>
 <h3>Using the package without the shiny app</h3>
 <p>One can also use the relevant functions of the package directly without starting the shiny app.</p>
 <pre class="r"><code>example.csv = system.file(&quot;data/IV.csv&quot;, package=&quot;MetaStudies&quot;)
-dat = read.csv(example.csv)
+dat = read.csv(example.csv,header = FALSE)
+colnames(dat) = c(&quot;X&quot;,&quot;sigma&quot;)
 head(dat)</code></pre>
 <pre><code>##         X  sigma
 ## 1  98.592 72.412
@@ -225,7 +226,7 @@ head(dat)</code></pre>
 ## 5   2.150  0.810
 ## 6   1.050  0.270</code></pre>
 <p>This is an example data set extracted from the supplemental data of the meta study by <a href="https://www.aeaweb.org/articles?id=10.1257/aer.20190687">Brodeur et al. (2019)</a>. It is a subset of their data set containing estimated coefficients and their standard errors from a sample of economic articles that use an instrumental variable (IV) approach to estimate causal effects.</p>
-<p>Let us run an analysies with the Andrews and Kasy (2019) method:</p>
+<p>Let us run an analysis with the Andrews and Kasy (2019) method:</p>
 <pre class="r"><code>ms = metastudies_estimation(X=dat$X,sigma=dat$sigma,model = &quot;t&quot;,cutoffs = c(1.645, 1.96, 2.58),symmetric = TRUE)
 # Show plot of results
 estimates_plot(ms)</code></pre>
@@ -270,10 +271,10 @@ cor.test(log(fdat$X), log(fdat$sigma))</code></pre>
 ## sample estimates:
 ##       cor 
 ## 0.9210279</code></pre>
-<p>We find that in the subsample of non-significant z-statistics the log’s of estimated coefficients and standard errors are highly correlated with a 95% CI of [0.913, 0.928].</p>
-<p>Kranz and Pütz (2021) state as intuition for that correlation that a lot of variation in estimated coefficient and standard error is driven by the scaling of the dependent and explanatory variables in the regressions. For example, if we would rescale all exlplanatory variables in a regression by multiplying them with a factor <code>1/m</code>, then the corresponding estimates and standard errors would both change by the factor <code>m</code>. This could lead to a strong positive correlation for the log-values even absent publication bias.</p>
-<p>Yet, as Isaiah Andrews has pointed out in an email communication from a theoretic perspective that informal sub-sample test is less suited as a formal specification test since it has the theoretical problem that when taking a sub-sample conditional on z, this may in principle induce a statistical dependence between <code>X</code> and <code>sigma</code> even if both variables are statistically independent in the complete sample.</p>
-<p>Isaiah Andrews suggested as an alternative, to use all observations but weight them with the inverse of the estimated publication probabilities. Under the null hypothesis that all assumptions of the chosen specification of the Andrews and Kasy (2019) approach are satisfied, this inverse probability weighting allows to recover the correlation in the unobserved latent distribution of tests if no publication bias were present. Let’s do it:</p>
+<p>We find that in the sub-sample of non-significant z-statistics the log’s of estimated coefficients and standard errors are highly correlated with a 95% CI of [0.913, 0.928].</p>
+<p>Kranz and Pütz (2021) state as intuition for that correlation that a lot of variation in estimated coefficient and standard error is driven by the scaling of the dependent and explanatory variables in the regressions. For example, if we would rescale all explanatory variables in a regression by multiplying them with a factor <code>1/m</code>, then the corresponding estimates and standard errors would both change by the factor <code>m</code>. This could lead to a strong positive correlation for the log-values even absent publication bias.</p>
+<p>Yet, as Isaiah Andrews has pointed out, from a theoretic perspective that informal sub-sample test is less suited as a formal specification test. There is the theoretical problem that when taking a sub-sample conditional on z, this may in principle induce a statistical dependence between <code>X</code> and <code>sigma</code> even if both variables are statistically independent in the complete sample.</p>
+<p>Isaiah Andrews suggested as an alternative, to use all observations but weight them with the inverse of the estimated publication probabilities. Under the null hypothesis that all assumptions of the chosen specification of the Andrews and Kasy (2019) approach are satisfied, this inverse probability weighting allows to recover the correlation in the unobserved latent distribution of tests if no publication bias were present. Let’s do that…</p>
 <pre class="r"><code>dat.log = ms$dat %&gt;%
   filter(X &gt;0, sigma &gt;0) %&gt;%
   mutate(X = log(X), sigma=log(sigma))
@@ -281,7 +282,7 @@ cor.test(log(fdat$X), log(fdat$sigma))</code></pre>
 cor.ipv = cov.wt(dat.log[,1:2],1/dat.log$pub.prob, cor=TRUE)$cor[1,2]
 cor.ipv</code></pre>
 <pre><code>## [1] 0.8782808</code></pre>
-<p>Also the inverse probability weight shows a high correlation between both variables.</p>
+<p>We see that also the inverse probability weighting approach shows a high correlation between both variables.</p>
 <p>The function <code>metastudy_X_sigma_cors</code> automatically computes those correlations and additional measures:</p>
 <pre class="r"><code>metastudy_X_sigma_cors(ms)</code></pre>
 <pre><code>## # A tibble: 10 x 9
@@ -301,7 +302,7 @@ cor.ipv</code></pre>
 <p>You see the correlations in log and levels and also the coefficient of a linear regression of <code>sigma</code> on <code>X</code>.</p>
 <div id="confidence-intervals-for-the-inverse-probability-weighting-approach" class="section level3">
 <h3>Confidence intervals for the inverse probability weighting approach</h3>
-<p>Note that correct standard errors and confidence intervals for the inverse probability weighting approach are not trivial to compute since they must also take into account the uncertainity when estimating the publication probabilities. Iasiah Andrews suggested that a GMM approach could yield correct standard errors. However, not beeing a theoretical econometrician, I don’t find it trivial to implement the GMM approach. Luckiliy, one can oten substitute theoretical understanding with brute-force bootstrap computation.</p>
+<p>Note that correct standard errors and confidence intervals for the inverse probability weighting approach are not trivial to compute since they must also take into account the uncertainty when estimating the publication probabilities. Isaiah Andrews suggested that a GMM approach could yield correct standard errors. However, not being a theoretical econometrician, I don’t find it trivial to implement the GMM approach. Luckily, one can sometimes substitute theoretical understanding with brute-force bootstrap computation…</p>
 <p>The function <code>bootstrap_specification_tests</code> computes confidence intervals using a bootstrap approach. In each run, we draw a bootstrap sample from the original data, run the Andrews and Kasy approach on the bootstrap sample and then compute the correlation using the estimated publication probabilities. This procedure can be very time consuming and is perhaps better run on a server with multiple cores:</p>
 <pre class="r"><code># Takes long to run unless you have a lot of cores
 bst = bootstrap_specification_tests(dat$X, dat$sigma, B = 100, num.cores = 10)</code></pre>
@@ -318,7 +319,7 @@ filter(sum, trans==&quot;log&quot;, mode==&quot;ipv&quot;) %&gt;%
 ## 2 log   ipv   ci.up  0.891
 ## 3 log   ipv   mean   0.877
 ## 4 log   ipv   median 0.878</code></pre>
-<p>We see from the rows where <code>stat</code> is <code>ci.low</code> and <code>ci.up</code> that the 95% CI of the correlation computed via inverse probabilty weighting is far away from 0. This suggests that the independence assumption of Andrews and Kasy (2019) seems violated in this example data set.</p>
+<p>We see from the rows where <code>stat</code> is <code>ci.low</code> and <code>ci.up</code> that the 95% CI of the correlation computed via inverse probability weighting is far away from 0. This suggests that the independence assumption of Andrews and Kasy (2019) seems violated in this example data set.</p>
 </div>
 <div id="references" class="section level3">
 <h3>References</h3>
