@@ -28,12 +28,12 @@ While the latent distribution cannot be observed, the table above shows
 some correlations for which absolute values not close to zero may indicate problems with respect to this assumption.
 
 The first correlation uses an inverse probability weighting approach.
-More precisely we compute a weighted correlation weighting each observation inversely with the estimated publication probability for it. Assuming all
-assumptions are satisfied this should yield a consistent estimate of the correlation in the unobserved latent distribution.
+More precisely, we compute a weighted correlation, weighting each observation inversely with its estimated publication probability. Assuming all
+assumptions are satisfied, this should yield a consistent estimator of the correlation in the unobserved latent distribution.
 
 Later rows show the correlations between the estimate and standard
 errors separately for each interval inside which a constant publication
-probability is assumed using directly the observed data without inverse probability weighting. While those are not formal tests, it would be reassuring if these correlations would be close to zero.")
+probability is assumed using directly the observed data without inverse probability weighting. While those are not formal tests, it would be reassuring if these correlations are close to zero.")
       )
     )
   } else {
