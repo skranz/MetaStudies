@@ -92,22 +92,7 @@ A crucial (and strong) assumption of the implemented method from Andrews and Kas
 
 Of course, the problem is that we don't observe the latent distribution of `X` and `sigma` absent publication bias but only the resulting distribution distorted by publication bias.
 
-As a first informal test, we can look at the correlations between `X` and `sigma` inside each interval of z-statistics for which we assume a constant publication probability. E.g. here for all non-significant observations with `abs(z)< 1.645`:
-
-```{r}
-fdat = ms$dat %>%
-  filter(abs(z) <= 1.645, abs(sigma)>0, abs(X)>0)
-
-cor.test(log(fdat$X), log(fdat$sigma))
-```
-
-We find that in the sub-sample of non-significant z-statistics the log's of estimated coefficients and standard errors are highly correlated with a 95% CI of [0.913, 0.928].
-
-Kranz and Pütz (2021) state as intuition for that correlation that a lot of variation in estimated coefficient and standard error is driven by the scaling of the dependent and explanatory variables in the regressions. For example, if we would rescale all explanatory variables in a regression by multiplying them with a factor `1/m`, then the corresponding estimates and standard errors would both change by the factor `m`. This could lead to a strong positive correlation for the log-values even absent publication bias.
-
-Yet, as Isaiah Andrews has pointed out, from a theoretic perspective that informal sub-sample test is less suited as a formal specification test. There is the theoretical problem that when taking a sub-sample conditional on z, this may in principle induce a statistical dependence between `X` and `sigma` even if both variables are statistically independent in the complete sample. 
-
-Isaiah Andrews suggested as an alternative, to use all observations but weight them with the inverse of the estimated publication probabilities. Under the null hypothesis that all assumptions of the chosen specification of the Andrews and Kasy (2019) approach are satisfied, this inverse probability weighting allows to recover the correlation in the unobserved latent distribution of tests if no publication bias were present. Let's do that...
+Isaiah Andrews suggested, to weight observations with the inverse of the estimated publication probabilities. Under the null hypothesis that all assumptions of the chosen specification of the Andrews and Kasy (2019) approach are satisfied, this inverse probability weighting allows to recover the correlation in the unobserved latent distribution of tests if no publication bias were present. Let's do that...
 
 ```{r}
 dat.log = ms$dat %>%
@@ -120,13 +105,16 @@ cor.ipv
 
 We see that also the inverse probability weighting approach shows a high correlation between both variables.
 
-The function `metastudy_X_sigma_cors` automatically computes those correlations and additional measures:
+The function `metastudy_X_sigma_cors` automatically computes this correlation for log and levels, as well as some additional measures:
 
 ```{r}
 metastudy_X_sigma_cors(ms)
 ```
 
-You see the correlations in log and levels and also the coefficient of a linear regression of `sigma` on `X`.
+You see the correlations in log and levels and also the coefficient of a linear regression of `sigma` on `X`  and the R-squared of that regression.
+
+
+Kranz and Pütz (2021) state as intuition for that correlation that a lot of variation in estimated coefficient and standard error is driven by the scaling of the dependent and explanatory variables in the regressions. For example, if we would rescale all explanatory variables in a regression by multiplying them with a factor `1/m`, then the corresponding estimates and standard errors would both change by the factor `m`. This could lead to a strong positive correlation for the log-values even absent publication bias.
 
 ### Confidence intervals for the inverse probability weighting approach
 
@@ -136,7 +124,7 @@ The function `bootstrap_specification_tests` computes confidence intervals using
 
 ```{r eval=FALSE}
 # Takes long to run unless you have a lot of cores
-bst = bootstrap_specification_tests(dat$X, dat$sigma, B = 100, num.cores = 10)
+bst = bootstrap_specification_tests(dat$X, dat$sigma, B = 500, num.cores = 2)
 ```
 
 The resulting object contains a field `sim` that contains raw data of all bootstrap results and a field `sum` that contains summary results.
@@ -145,10 +133,10 @@ I have included the bootstrap summary for the example data set in the MetaStudie
 ```{r}
 sum = readRDS(system.file("data/bootstrap_sum_IV.Rds", package="MetaStudies"))
 filter(sum, trans=="log", mode=="ipv") %>%
-  select(trans, mode, stat, cor)
+  select(trans, mode, stat, cor, beta, r.sqr)
 ```
 
-We see from the rows where `stat` is `ci.low` and `ci.up` that the 95% CI of the correlation computed via inverse probability weighting is far away from 0. This suggests that the independence assumption of Andrews and Kasy (2019) seems violated in this example data set.
+We see from the rows where `stat` is `ci.low` and `ci.up` that the 95% CI of the correlation `[0.862, 0.891] computed via inverse probability weighting is far away from 0. This suggests that the independence assumption of Andrews and Kasy (2019) seems violated in this example data set.
 
 ### References
 

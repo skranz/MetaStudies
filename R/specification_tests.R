@@ -7,7 +7,7 @@
 #'
 #' While the latent distribution cannot be observed, this function computes
 #' some correlations that may indicate problems with respect to this assumption.
-#' Results with \code{mode=="ipv"} use an inverse probability weighting approach.
+#' We use an inverse probability weighting approach.
 #' More precisely, it weights inversely with the estimated publication probabilities to recover the correlation in the
 #' unobserved latent distribution. (This approach was suggested in an email by
 #' Isaiah Andrews and implemented by Sebastian Kranz).
@@ -15,17 +15,17 @@
 #' To compute standard errrors via bootstrap (very time consuming),
 #' call the function \code{bootstrap_specification_tests}.
 #'
-#' In addition we show the correlations between the estimate and standard
-#' errors separately for each interval inside which a constant publication
-#' probability is assumed using directly the observed data without
-#' inverse probability weighting.
-#' While not a formal test, it would be reassuring if these correlations
-#' would be close to zero.
-#'
 #' @param ms An object returned from the function \code{metastudies_estimation}
 #' @returns a data frame with correlations, confidence intervals and also relevent results from a linear regression of standard errors on estimates.
-metastudy_X_sigma_cors = function(ms, intervals = 1:NROW(ms$prob.df)) {
+metastudy_X_sigma_cors = function(ms) {
   #restore.point("metastudy_X_sigma_cors")
+
+  # intervals = 1:NROW(ms$prob.df)
+  # Don't use the interval correlations anyore
+  # Isaiah Andrews said there could be cases where
+  # conditioning on z could induce substantial artificial correlations
+  # That could then be misleading
+  intervals = NULL
 
   dat = ms$dat
 
@@ -90,16 +90,16 @@ metastudy_X_sigma_cors = function(ms, intervals = 1:NROW(ms$prob.df)) {
     bind_rows(
       data.frame(
         mode = int.label, trans = "level",
-        cor = cor, conf.cor.low = conf.cor.low, conf.cor.up = conf.cor.up,
-        beta = beta, r.sqr = r2,
-        conf.beta.low = conf[1], conf.beta.up =conf[2]
+        cor = cor, #conf.cor.low = conf.cor.low, conf.cor.up = conf.cor.up,
+        beta = beta, r.sqr = r2
+        #conf.beta.low = conf[1], conf.beta.up =conf[2]
       ),
       data.frame(
         mode = int.label, trans = "log",
         cor = cor.log,
-        conf.cor.low = conf.cor.log.low, conf.cor.up = conf.cor.log.up,
-        beta = beta.log, r.sqr = r2.log,
-        conf.beta.low = conf.log[1], conf.beta.up =conf.log[2]
+        #conf.cor.low = conf.cor.log.low, conf.cor.up = conf.cor.log.up,
+        beta = beta.log, r.sqr = r2.log
+        #conf.beta.low = conf.log[1], conf.beta.up =conf.log[2]
       )
     )
   }))
@@ -107,15 +107,15 @@ metastudy_X_sigma_cors = function(ms, intervals = 1:NROW(ms$prob.df)) {
 
   ipv.res = data.frame(
     mode = "ipv", trans = "level",
-    cor = cor.ipv, conf.cor.low = NA, conf.cor.up = NA,
-    beta = beta.ipv, r.sqr = r2.ipv,
-    conf.beta.low =  conf.ipv.low, conf.beta.up =  conf.ipv.up
+    cor = cor.ipv, #conf.cor.low = NA, conf.cor.up = NA,
+    beta = beta.ipv, r.sqr = r2.ipv
+    #conf.beta.low =  conf.ipv.low, conf.beta.up =  conf.ipv.up
   )
   ipv.log.res = data.frame(
     mode = "ipv", trans = "log",
-    cor = cor.log.ipv, conf.cor.low = NA, conf.cor.up = NA,
-    beta = beta.log.ipv,  r.sqr = r2.log.ipv,
-    conf.beta.low =  conf.log.ipv.low, conf.beta.up = conf.log.ipv.up
+    cor = cor.log.ipv, #conf.cor.low = NA, conf.cor.up = NA,
+    beta = beta.log.ipv,  r.sqr = r2.log.ipv
+    #conf.beta.low =  conf.log.ipv.low, conf.beta.up = conf.log.ipv.up
   )
 
   res = bind_rows(

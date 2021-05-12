@@ -1,3 +1,12 @@
+---
+title: "MetaStudies"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+
+
 ### Overview
 
 This package implements one of the two methods from [Andrews and Kasy (2019)](https://www.aeaweb.org/articles?id=10.1257/aer.20180310) to estimate the degree of publication bias given a meta-study data set that contains estimates and standard errors (typically of reported regression results) from published studies.
@@ -118,37 +127,7 @@ A crucial (and strong) assumption of the implemented method from Andrews and Kas
 
 Of course, the problem is that we don't observe the latent distribution of `X` and `sigma` absent publication bias but only the resulting distribution distorted by publication bias.
 
-As a first informal test, we can look at the correlations between `X` and `sigma` inside each interval of z-statistics for which we assume a constant publication probability. E.g. here for all non-significant observations with `abs(z)< 1.645`:
-
-
-```r
-fdat = ms$dat %>%
-  filter(abs(z) <= 1.645, abs(sigma)>0, abs(X)>0)
-
-cor.test(log(fdat$X), log(fdat$sigma))
-```
-
-```
-## 
-## 	Pearson's product-moment correlation
-## 
-## data:  log(fdat$X) and log(fdat$sigma)
-## t = 94.053, df = 1582, p-value < 2.2e-16
-## alternative hypothesis: true correlation is not equal to 0
-## 95 percent confidence interval:
-##  0.9132008 0.9281756
-## sample estimates:
-##       cor 
-## 0.9210279
-```
-
-We find that in the sub-sample of non-significant z-statistics the log's of estimated coefficients and standard errors are highly correlated with a 95% CI of [0.913, 0.928].
-
-Kranz and Pütz (2021) state as intuition for that correlation that a lot of variation in estimated coefficient and standard error is driven by the scaling of the dependent and explanatory variables in the regressions. For example, if we would rescale all explanatory variables in a regression by multiplying them with a factor `1/m`, then the corresponding estimates and standard errors would both change by the factor `m`. This could lead to a strong positive correlation for the log-values even absent publication bias.
-
-Yet, as Isaiah Andrews has pointed out, from a theoretic perspective that informal sub-sample test is less suited as a formal specification test. There is the theoretical problem that when taking a sub-sample conditional on z, this may in principle induce a statistical dependence between `X` and `sigma` even if both variables are statistically independent in the complete sample. 
-
-Isaiah Andrews suggested as an alternative, to use all observations but weight them with the inverse of the estimated publication probabilities. Under the null hypothesis that all assumptions of the chosen specification of the Andrews and Kasy (2019) approach are satisfied, this inverse probability weighting allows to recover the correlation in the unobserved latent distribution of tests if no publication bias were present. Let's do that...
+Isaiah Andrews suggested, to weight observations with the inverse of the estimated publication probabilities. Under the null hypothesis that all assumptions of the chosen specification of the Andrews and Kasy (2019) approach are satisfied, this inverse probability weighting allows to recover the correlation in the unobserved latent distribution of tests if no publication bias were present. Let's do that...
 
 
 ```r
@@ -166,7 +145,7 @@ cor.ipv
 
 We see that also the inverse probability weighting approach shows a high correlation between both variables.
 
-The function `metastudy_X_sigma_cors` automatically computes those correlations and additional measures:
+The function `metastudy_X_sigma_cors` automatically computes this correlation for log and levels, as well as some additional measures:
 
 
 ```r
@@ -174,23 +153,17 @@ metastudy_X_sigma_cors(ms)
 ```
 
 ```
-## # A tibble: 10 x 9
-##    mode         trans   cor conf.cor.low conf.cor.up  beta r.sqr conf.beta.low
-##    <chr>        <chr> <dbl>        <dbl>       <dbl> <dbl> <dbl>         <dbl>
-##  1 ipv          level 0.909       NA          NA     0.866 0.808         0.854
-##  2 ipv          log   0.878       NA          NA     0.904 0.840         0.893
-##  3 [0,1.645)    level 0.909        0.900       0.917 0.919 0.827         0.899
-##  4 [0,1.645)    log   0.921        0.913       0.928 0.853 0.848         0.836
-##  5 [1.645,1.96) level 1.00         1.00        1.00  0.598 1.00          0.597
-##  6 [1.645,1.96) log   1.00         1.00        1.00  1.00  0.999         0.998
-##  7 [1.96,2.58)  level 1.00         0.999       1.00  0.449 0.999         0.448
-##  8 [1.96,2.58)  log   0.999        0.999       0.999 0.998 0.998         0.995
-##  9 [2.58,Inf)   level 0.994        0.994       0.995 0.355 0.989         0.354
-## 10 [2.58,Inf)   log   0.955        0.951       0.959 0.988 0.912         0.974
-## # ... with 1 more variable: conf.beta.up <dbl>
+## # A tibble: 2 x 5
+##   mode  trans   cor  beta r.sqr
+##   <chr> <chr> <dbl> <dbl> <dbl>
+## 1 ipv   level 0.909 0.866 0.808
+## 2 ipv   log   0.878 0.904 0.840
 ```
 
-You see the correlations in log and levels and also the coefficient of a linear regression of `sigma` on `X`.
+You see the correlations in log and levels and also the coefficient of a linear regression of `sigma` on `X`  and the R-squared of that regression.
+
+
+Kranz and Pütz (2021) state as intuition for that correlation that a lot of variation in estimated coefficient and standard error is driven by the scaling of the dependent and explanatory variables in the regressions. For example, if we would rescale all explanatory variables in a regression by multiplying them with a factor `1/m`, then the corresponding estimates and standard errors would both change by the factor `m`. This could lead to a strong positive correlation for the log-values even absent publication bias.
 
 ### Confidence intervals for the inverse probability weighting approach
 
@@ -201,7 +174,7 @@ The function `bootstrap_specification_tests` computes confidence intervals using
 
 ```r
 # Takes long to run unless you have a lot of cores
-bst = bootstrap_specification_tests(dat$X, dat$sigma, B = 100, num.cores = 10)
+bst = bootstrap_specification_tests(dat$X, dat$sigma, B = 500, num.cores = 2)
 ```
 
 The resulting object contains a field `sim` that contains raw data of all bootstrap results and a field `sum` that contains summary results.
@@ -211,21 +184,21 @@ I have included the bootstrap summary for the example data set in the MetaStudie
 ```r
 sum = readRDS(system.file("data/bootstrap_sum_IV.Rds", package="MetaStudies"))
 filter(sum, trans=="log", mode=="ipv") %>%
-  select(trans, mode, stat, cor)
+  select(trans, mode, stat, cor, beta, r.sqr)
 ```
 
 ```
-## # A tibble: 4 x 4
+## # A tibble: 4 x 6
 ## # Groups:   mode [1]
-##   trans mode  stat     cor
-##   <fct> <fct> <chr>  <dbl>
-## 1 log   ipv   ci.low 0.862
-## 2 log   ipv   ci.up  0.891
-## 3 log   ipv   mean   0.877
-## 4 log   ipv   median 0.878
+##   trans mode  stat     cor  beta r.sqr
+##   <fct> <fct> <chr>  <dbl> <dbl> <dbl>
+## 1 log   ipv   ci.low 0.862 0.889 0.825
+## 2 log   ipv   ci.up  0.891 0.919 0.855
+## 3 log   ipv   mean   0.877 0.904 0.839
+## 4 log   ipv   median 0.878 0.903 0.839
 ```
 
-We see from the rows where `stat` is `ci.low` and `ci.up` that the 95% CI of the correlation computed via inverse probability weighting is far away from 0. This suggests that the independence assumption of Andrews and Kasy (2019) seems violated in this example data set.
+We see from the rows where `stat` is `ci.low` and `ci.up` that the 95% CI of the correlation `[0.862, 0.891] computed via inverse probability weighting is far away from 0. This suggests that the independence assumption of Andrews and Kasy (2019) seems violated in this example data set.
 
 ### References
 

@@ -19,21 +19,17 @@ MetaStudiesApp = function(csv.file=NULL,show.cor = TRUE,...) {
     lower.ui = tabsetPanel(
       tabPanel("Results",res.ui),
       tabPanel("Specification tests",
-        h3("Correlations between logs of estimate and standard deviation"),
+        h3("Estimated correlations between estimate and standard deviation in latent distribution"),
         tableOutput("cortable"),
         helpText("
 Explanation: One crucial assumption of the Andrews and Kasy (2019) approach is that in the latent distribution without publication bias the estimate and its standard error are statistically independent across tests.
 
-While the latent distribution cannot be observed, the table above shows
-some correlations for which absolute values not close to zero may indicate problems with respect to this assumption.
-
-The first correlation uses an inverse probability weighting approach.
+While the latent distribution cannot be observed, we use an inverse probability weighting approach to estimate the correlation inside the latent distribution.
 More precisely, we compute a weighted correlation, weighting each observation inversely with its estimated publication probability. Assuming all
 assumptions are satisfied, this should yield a consistent estimator of the correlation in the unobserved latent distribution.
 
-Later rows show the correlations between the estimate and standard
-errors separately for each interval inside which a constant publication
-probability is assumed using directly the observed data without inverse probability weighting. While those are not formal tests, it would be reassuring if these correlations are close to zero.")
+We show the correlation of absolute estimates and standard errors both in levels and in logs. To compute confidence intervals for the estimated correlations, you can call manually the function 'bootstrap_specification_tests' in the package MetaStudies (the computation can be quite slow).
+")
       )
     )
   } else {
@@ -144,19 +140,24 @@ probability is assumed using directly the observed data without inverse probabil
       output$cortable =  renderTable(rownames=TRUE,hover=TRUE,digits=3, striped=TRUE,{
         req(v$cors)
         tab = v$cors %>%
-          filter(trans=="log") %>%
+          filter(mode=="ipv") %>%
           mutate(
             cor = round(cor,3),
             label = case_when(
-              mode=="ipv" ~ "Estimated latent distribution",
-              TRUE ~ paste0("Observed distribution in range ",mode)
+              trans=="log" ~ "Logarithms",
+              TRUE ~ "Levels"
             ),
-            ci = case_when(
-              mode == "ipv" ~ "Not computed",
-              TRUE ~ paste0("[",round(conf.cor.low,3),", ",round(conf.cor.up,3),"]")
-            )
+
+            #label = case_when(
+            #  mode=="ipv" ~ "Estimated latent distribution",
+            #  TRUE ~ paste0("Observed distribution in range ",mode)
+            #),
+            #ci = case_when(
+            #  mode == "ipv" ~ "Not computed",
+            #  TRUE ~ paste0("[",round(conf.cor.low,3),", ",round(conf.cor.up,3),"]")
+            #)
           ) %>%
-          select(`Type`=label, `Correlation`=cor,`95% CI`=ci)
+          select(`Transformation`=label, `Correlation`=cor)
         tab
       })
     }
