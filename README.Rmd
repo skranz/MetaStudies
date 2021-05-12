@@ -20,6 +20,18 @@ https://github.com/maxkasy/MetaStudiesApp
 
 A crucial (and strong) assumption of the implemented method from Andrews and Kasy (2019) is that in the latent distribution absent publication bias, the estimates and standard errors are statistically independent. This package adds to Maximilian Kasy's original code functions that compute correlations that could indicate possible violations of this assumption. This will be explained further below (see also Kranz and Pütz (2021)).
 
+### Installation
+
+To install the package, run the following code:
+
+```{r eval=FALSE}
+options(repos = c(skranz = 'https://skranz.r-universe.dev',
+    CRAN = 'https://cloud.r-project.org'))
+install.packages('MetaStudies')
+```
+
+
+
 ### Running the app
 
 To run the app with a preloaded example data set just run inside RStudio:

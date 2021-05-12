@@ -1,12 +1,3 @@
----
-title: "MetaStudies"
-output: 
-  html_document: 
-    keep_md: yes
----
-
-
-
 ### Overview
 
 This package implements one of the two methods from [Andrews and Kasy (2019)](https://www.aeaweb.org/articles?id=10.1257/aer.20180310) to estimate the degree of publication bias given a meta-study data set that contains estimates and standard errors (typically of reported regression results) from published studies.
@@ -16,6 +7,19 @@ The code mainly consists of Maximilan Kasy's code of his shiny app for MetaStudi
 https://github.com/maxkasy/MetaStudiesApp
 
 A crucial (and strong) assumption of the implemented method from Andrews and Kasy (2019) is that in the latent distribution absent publication bias, the estimates and standard errors are statistically independent. This package adds to Maximilian Kasy's original code functions that compute correlations that could indicate possible violations of this assumption. This will be explained further below (see also Kranz and Pütz (2021)).
+
+### Installation
+
+To install the package, run the following code:
+
+
+```r
+options(repos = c(skranz = 'https://skranz.r-universe.dev',
+    CRAN = 'https://cloud.r-project.org'))
+install.packages('MetaStudies')
+```
+
+
 
 ### Running the app
 
