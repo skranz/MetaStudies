@@ -264,13 +264,13 @@ estimates_plot(ms)</code></pre>
 <p>Of course, the problem is that we don’t observe the latent distribution of <code>X</code> and <code>sigma</code> absent publication bias but only the resulting distribution distorted by publication bias.</p>
 <p>Isaiah Andrews suggested, to weight observations with the inverse of the estimated publication probabilities. Under the null hypothesis that all assumptions of the chosen specification of the Andrews and Kasy (2019) approach are satisfied, this inverse probability weighting allows to recover the correlation in the unobserved latent distribution of tests if no publication bias were present. Let’s do that…</p>
 <pre class="r"><code>dat.log = ms$dat %&gt;%
-  filter(X &gt;0, sigma &gt;0) %&gt;%
-  mutate(X = log(X), sigma=log(sigma))
+  filter(abs(X) &gt;0, sigma &gt;0) %&gt;%
+  mutate(X = log(abs(X)), sigma=log(sigma))
 
 cor.ipv = cov.wt(dat.log[,1:2],1/dat.log$pub.prob, cor=TRUE)$cor[1,2]
 cor.ipv</code></pre>
 <pre><code>## [1] 0.8782808</code></pre>
-<p>We see that also the inverse probability weighting approach shows a high correlation between both variables.</p>
+<p>We find a high correlation between both variables in logs.</p>
 <p>The function <code>metastudy_X_sigma_cors</code> automatically computes this correlation for log and levels, as well as some additional measures:</p>
 <pre class="r"><code>metastudy_X_sigma_cors(ms)</code></pre>
 <pre><code>## # A tibble: 2 x 5

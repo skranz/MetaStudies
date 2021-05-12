@@ -1,12 +1,3 @@
----
-title: "MetaStudies"
-output: 
-  html_document: 
-    keep_md: yes
----
-
-
-
 ### Overview
 
 This package implements one of the two methods from [Andrews and Kasy (2019)](https://www.aeaweb.org/articles?id=10.1257/aer.20180310) to estimate the degree of publication bias given a meta-study data set that contains estimates and standard errors (typically of reported regression results) from published studies.
@@ -132,8 +123,8 @@ Isaiah Andrews suggested, to weight observations with the inverse of the estimat
 
 ```r
 dat.log = ms$dat %>%
-  filter(X >0, sigma >0) %>%
-  mutate(X = log(X), sigma=log(sigma))
+  filter(abs(X) >0, sigma >0) %>%
+  mutate(X = log(abs(X)), sigma=log(sigma))
 
 cor.ipv = cov.wt(dat.log[,1:2],1/dat.log$pub.prob, cor=TRUE)$cor[1,2]
 cor.ipv
@@ -143,7 +134,7 @@ cor.ipv
 ## [1] 0.8782808
 ```
 
-We see that also the inverse probability weighting approach shows a high correlation between both variables.
+We find a high correlation between both variables in logs.
 
 The function `metastudy_X_sigma_cors` automatically computes this correlation for log and levels, as well as some additional measures:
 
